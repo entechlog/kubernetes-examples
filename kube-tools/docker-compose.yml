@@ -1,0 +1,27 @@
+---
+version: '3'
+
+services:
+  kube-tools:
+    image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}
+    container_name: kube-tools
+    build: ./docker/
+    command: 
+      - bash 
+      - -c 
+      - |
+        echo "Launching kube-tools"
+        sleep infinity
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - type: bind
+        source: /C
+        target: /C
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    environment:
+      - TZ=Etc/GMT
+      - DOCKER_HOST=unix:///var/run/docker.sock

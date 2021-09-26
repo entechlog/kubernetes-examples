@@ -1,0 +1,50 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: changing hostname
+      hostname: name="{{ inventory_hostname }}"
+      register: "hostname_status"
+      become: true
+      when: ansible_fqdn != ansible_ssh_host
+
+    - name: restart server
+      command: sleep 3 && shutdown -r now "rebooting to complete hostname change"
+      async: 1
+      poll: 0
+      ignore_errors: True
+      become: true
+      when: (reboot is defined) and hostname_status.changed
+
+    - name: wait for server to come back
+      wait_for:
+        host: "{{ ansible_host | default(inventory_hostname) }}"
+        port: 22
+        search_regex: OpenSSH
+        delay: 10
+      vars:
+        ansible_connection: local
+      become: false
+      when: (reboot is defined) and hostname_status.changed
+
+    - name: change /etc/hosts to remove old hostname
+      tags:
+        - hosts
+      become: true
+      lineinfile: state=present
+        dest=/etc/hosts
+        line="{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ ansible_hostname }}"
+        regexp="^{{ ansible_default_ipv4.address }}"
+      when: ansible_fqdn != inventory_hostname
+
+    - name: print hostnames
+      debug: 
+        msg: "ansible_fqdn is {{ ansible_fqdn }}, inventory_hostname is {{ inventory_hostname }}"
+  
+#    - name: validate ansible_fqdn == inventory_hostname
+#      tags:
+#        - validate
+#      assert:
+#        that: ansible_fqdn == inventory_hostname
+#        quiet: yes
