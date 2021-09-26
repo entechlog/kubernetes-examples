@@ -1,0 +1,13 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: copy pub key to authorized_keys
+      copy:
+        src: "/home/{{ ansible_user }}/.ssh/id_rsa.pub"
+        dest: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0644"
+        remote_src: False
