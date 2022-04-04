@@ -13,6 +13,7 @@ RUN apt-get update && \
     openssh-server \ 
     sudo \
     nmap \
+    gnupg \
     apt-transport-https \
     ca-certificates && \
     apt-get purge -y --auto-remove
@@ -22,6 +23,12 @@ RUN sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://
 RUN echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 RUN sudo apt-get update
 RUN sudo apt-get install -y kubectl
+
+# Install helm
+RUN curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+RUN echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+RUN sudo apt-get update
+RUN sudo apt-get install helm
 
 # Install Python packages
 COPY requirements.txt ./
