@@ -130,3 +130,6 @@ dmypy.json
 
 # Ansible
 *.retry
+
+# Kube Demo
+strimzi-0.*
