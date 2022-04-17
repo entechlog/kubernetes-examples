@@ -133,3 +133,4 @@ dmypy.json
 
 # Kube Demo
 strimzi-0.*
+config

@@ -1,0 +1,19 @@
+---
+version: '3'
+
+services:
+  octant:
+    image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}
+    container_name: octant
+    build: ./docker/
+    command: 
+      - bash 
+      - -c 
+      - |
+        echo "Launching octant"
+        KUBECONFIG=/.kube/config OCTANT_LISTENER_ADDR=0.0.0.0:7777 octant --disable-open-browser
+    restart: unless-stopped
+    ports:
+      - "7777:7777"
+    volumes:
+      - ./.kube/config:/.kube/config

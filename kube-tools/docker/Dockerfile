@@ -7,6 +7,7 @@ WORKDIR /usr/app
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
+    wget \
     git \
     curl \
     sshpass \
@@ -29,6 +30,10 @@ RUN curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
 RUN echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 RUN sudo apt-get update
 RUN sudo apt-get install helm
+
+# Install 
+RUN wget https://github.com/vmware-tanzu/octant/releases/download/v0.25.1/octant_0.25.1_Linux-64bit.deb
+RUN dpkg -i octant_0.25.1_Linux-64bit.deb
 
 # Install Python packages
 COPY requirements.txt ./
