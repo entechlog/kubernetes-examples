@@ -32,7 +32,7 @@ spec:
           type: tls
       - name: external
         port: 9094
-        type: nodeport
+        type: loadbalancer
         tls: false
     resources: {}
     storage:

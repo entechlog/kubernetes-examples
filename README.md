@@ -7,6 +7,6 @@
 This repository contains kubernetes examples for quick demo.
 
 ## Demo Details
-- [Kube Tools](./kube-tools/)
+- [Kube Tools](./kube-tools/README.md)
 - [Set up Kubernetes cluster with Raspberry Pi](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/)
 - [Apache Kafka cluster on Kubernetes using Strimzi](https://www.entechlog.com/blog/kafka/create-kafka-cluster-on-kubernetes-using-strimzi/)
