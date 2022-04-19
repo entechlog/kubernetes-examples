@@ -2,9 +2,9 @@
 version: '3'
 
 services:
-  octant:
+  k9s:
     image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}
-    container_name: octant
+    container_name: k9s
     build:
       context: ./docker/
       args:
@@ -14,10 +14,11 @@ services:
       - bash 
       - -c 
       - |
-        echo "Launching octant"
-        KUBECONFIG=/.kube/config OCTANT_LISTENER_ADDR=0.0.0.0:7777 octant --disable-open-browser
-    restart: unless-stopped
-    ports:
-      - "7777:7777"
+        echo "Launching k9s"
+        sleep infinity
+    restart: on-failure
     volumes:
       - ./.kube/config:/.kube/config
+    environment:
+      - KUBECONFIG=/.kube/config
+      - TERM=xterm-256color

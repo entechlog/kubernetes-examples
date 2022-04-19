@@ -1,0 +1,18 @@
+---
+version: '3'
+
+services:
+  scope:
+    image: weaveworks/scope:latest
+    pid: "host"
+    privileged: true
+    container_name: weavescope
+    restart: on-failure
+    labels:
+      - "works.weave.role=system"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    command:
+      - "--probe.docker=true"
+    ports:
+      - 4040:4040
