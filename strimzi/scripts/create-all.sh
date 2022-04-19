@@ -2,11 +2,17 @@
 
 # Create Namespace
 kubectl apply -f strimzi/kafka/kafka-namespace.yaml
+kubectl config set-context --current --namespace=kafka
 
 # Create Kafka
 sed -i 's/namespace: .*/namespace: kafka/' strimzi/strimzi-0.28.0/install/cluster-operator/*RoleBinding*.yaml
 kubectl apply -f strimzi/strimzi-0.28.0/install/cluster-operator/
 sleep 10
+
+kubectl apply -f strimzi/kafka/kafka-clusterrolebindings.yaml
+sleep 10
+
+kubectl wait --for condition=established --timeout=300s crd/kafkas.kafka.strimzi.io
 
 kubectl apply -f strimzi/kafka/kafka-ephemeral.yaml
 sleep 10

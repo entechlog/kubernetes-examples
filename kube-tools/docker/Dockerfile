@@ -8,6 +8,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     wget \
+    snapd \
     git \
     curl \
     sshpass \
@@ -31,9 +32,17 @@ RUN echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc
 RUN sudo apt-get update
 RUN sudo apt-get install helm
 
-# Install 
-RUN wget https://github.com/vmware-tanzu/octant/releases/download/v0.25.1/octant_0.25.1_Linux-64bit.deb
+# Get version from env
+ARG OCTANT_VERSION
+ARG K9S_VERSION
+
+# Install octant
+RUN wget https://github.com/vmware-tanzu/octant/releases/download/v${OCTANT_VERSION}/octant_${OCTANT_VERSION}_Linux-64bit.deb
 RUN dpkg -i octant_0.25.1_Linux-64bit.deb
+
+# Install k9s
+RUN sudo wget -qO- https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_x86_64.tar.gz | tar zxvf -  -C /tmp/
+RUN sudo mv /tmp/k9s /usr/local/bin
 
 # Install Python packages
 COPY requirements.txt ./

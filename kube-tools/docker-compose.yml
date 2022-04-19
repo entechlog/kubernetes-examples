@@ -5,7 +5,11 @@ services:
   kube-tools:
     image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}
     container_name: kube-tools
-    build: ./docker/
+    build:
+      context: ./docker/
+      args:
+        OCTANT_VERSION: ${OCTANT_VERSION}
+        K9S_VERSION: ${K9S_VERSION}
     command: 
       - bash 
       - -c 

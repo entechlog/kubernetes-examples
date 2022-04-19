@@ -21,10 +21,13 @@ kubectl delete --ignore-not-found=true -f strimzi/kafka/kafka-ephemeral.yaml
 sleep 1
 kubectl delete --ignore-not-found=true -f strimzi/strimzi-0.28.0/install/cluster-operator/
 sleep 1
+kubectl delete --ignore-not-found=true -f strimzi/kafka/kafka-clusterrolebindings.yaml
+sleep 1
 
-# Delete Namespace
+# Delete All resources
 kubectl delete all --all 
 sleep 1
 
+# Delete Namespace
 kubectl delete --ignore-not-found=true -f strimzi/kafka/kafka-namespace.yaml
 sleep 5
