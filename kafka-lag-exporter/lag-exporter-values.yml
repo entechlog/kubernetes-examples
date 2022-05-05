@@ -1,0 +1,88 @@
+clusters:
+  - name: "default"
+    bootstrapBrokers: "192.168.0.101:31806"
+    consumerProperties:
+      security.protocol: PLAINTEXT
+    adminClientProperties:
+      security.protocol: PLAINTEXT
+
+## The interval between refreshing metrics
+pollIntervalSeconds: 30
+
+## Size of the sliding window of offsets to keep in each partition's lookup table
+lookupTableSize: 60
+
+## The Consumer Group `group.id` to use when connecting to Kafka
+clientGroupId: "kafkalagexporter"
+
+## The timeout when communicating with Kafka clusters
+kafkaClientTimeoutSeconds: 10
+
+## Reporters will send metrics to time series databases
+reporters:
+  prometheus:
+    ## Flag to enable the Prometheus metrics reporter
+    enabled: true
+    ## The port to run the Prometheus endpoint on
+    port: 8000
+
+metricWhitelist:
+  - .*
+
+## The log level of the ROOT logger
+rootLogLevel: INFO
+## The log level of Kafka Lag Exporter
+kafkaLagExporterLogLevel: INFO
+## The log level of `org.apache.kafka` logger
+kafkaLogLevel: INFO
+## The log level of Akka
+akkaLogLevel: DEBUG
+
+## You probably won't need to change anything below this line.
+image:
+  repository: lightbend/kafka-lag-exporter
+  tag: 0.6.8
+  pullPolicy: Always
+  pullSecrets: []
+securityContext: {}
+initContainers: []
+service:
+  type: NodePort
+  port: 8000
+  additionalLabels: {}
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+extraConfigmapMounts: []
+extraMounts: []
+
+hostAliases: {}
+
+env: {}
+
+# Define references to configmaps or secrets to be populated as environment variables
+envFromConfigMapRefs: []
+# - 'configmap-a'
+envFromSecretRefs: []
+# - 'secret-a'
+
+podAnnotations: {}
+  # foo: bar
+
+podExtraLabels: {}
+
+deploymentExtraLabels: {}
+
+## Readiness and liveness probe initial delay and timeout
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbeInitialDelay: 30
+readinessProbePeriodSeconds: 5
+readinessProbeTimeout: 30
+readinessProbeFailureThreshold: 3
+readinessProbeSuccessThreshold: 1
+livenessProbeInitialDelay: 30
+livenessProbePeriodSeconds: 15
+livenessProbeTimeout: 30
+livenessProbeFailureThreshold: 3
+livenessProbeSuccessThreshold: 1
