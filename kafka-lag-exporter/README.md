@@ -66,4 +66,11 @@ Quick run down on how to start kafka-lag-exporter in Kubernetes
   ```bash
   docker-compose -f docker-compose-kafka-lag-exporter-kube.yaml up -d --build
   ```
+
+- You can list and delete the helm deployments after the demo by running below command
   
+  ```bash
+  helm list
+
+  helm delete kafka-lag-exporter --namespace kafka
+  ```
