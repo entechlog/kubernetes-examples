@@ -1,6 +1,4 @@
 ---
-version: '3'
-
 services:
   k9s:
     image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}

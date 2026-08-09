@@ -1,0 +1,41 @@
+- name: check OS and hardware health
+  hosts: k3s_cluster
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: get uptime
+      command: uptime
+      register: uptime_output
+      changed_when: false
+
+    - name: get disk usage
+      command: df -h /
+      register: disk_output
+      changed_when: false
+
+    - name: get memory usage
+      command: free -h
+      register: memory_output
+      changed_when: false
+
+    - name: get cpu temperature
+      command: vcgencmd measure_temp
+      register: temp_output
+      changed_when: false
+      failed_when: false
+
+    - name: check for failed services
+      command: systemctl --failed --no-legend
+      register: failed_services
+      changed_when: false
+
+    - name: print health summary
+      debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Uptime: {{ uptime_output.stdout }}"
+          - "Disk: {{ disk_output.stdout_lines }}"
+          - "Memory: {{ memory_output.stdout_lines }}"
+          - "Temp: {{ temp_output.stdout | default('n/a') }}"
+          - "Failed services: {{ failed_services.stdout | default('none (all healthy)') }}"
