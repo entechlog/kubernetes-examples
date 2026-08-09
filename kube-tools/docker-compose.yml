@@ -1,6 +1,4 @@
 ---
-version: '3'
-
 services:
   kube-tools:
     image: entechlog/kube-tools${KUBE_TOOLS_VERSION_TAG}

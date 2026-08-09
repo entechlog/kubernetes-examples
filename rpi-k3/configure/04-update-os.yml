@@ -1,0 +1,27 @@
+- name: update and upgrade OS packages
+  hosts: k3s_cluster
+  become: yes
+
+  tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: upgrade all packages
+      apt:
+        upgrade: dist
+
+    - name: remove unused packages
+      apt:
+        autoremove: yes
+
+    - name: check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: reboot if required
+      reboot:
+        reboot_timeout: 300
+      when: reboot_required.stat.exists

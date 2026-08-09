@@ -1,0 +1,79 @@
+# Trimmed resource footprint for a 3-node Raspberry Pi 4 (8GB) cluster.
+# Defaults for kube-prometheus-stack assume 2-4Gi for Prometheus alone, which
+# is too heavy alongside k3s + everything else running on the same nodes.
+
+prometheus:
+  prometheusSpec:
+    # Without an explicit storageSpec, Prometheus runs on ephemeral emptyDir
+    # with only time-based retention as a limit - nothing stops disk usage
+    # from growing unbounded if data volume ever outpaces the retention
+    # window. retentionSize is a hard byte cap (Prometheus deletes oldest
+    # blocks once exceeded, regardless of the 7d window), and the PVC gives
+    # data actual persistence across pod restarts/rescheduling.
+    retention: 7d
+    retentionSize: "4GB"
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+grafana:
+  # 256Mi was too tight in practice - Grafana 13's app-platform architecture
+  # (registers many internal API groups: playlists, plugins, alerting, etc.)
+  # settles around 300-400Mi once warmed up and gets OOMKilled below that.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  # First boot on a Pi is slow: Grafana downloads several default app plugins
+  # (Explore Logs/Traces/Profiles, etc. - unused by this basic monitoring setup)
+  # over the network before it starts serving, which can exceed default probe
+  # tolerances and put the pod in a kill-before-ready restart loop.
+  livenessProbe:
+    initialDelaySeconds: 180
+    failureThreshold: 10
+  readinessProbe:
+    initialDelaySeconds: 60
+    failureThreshold: 10
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi

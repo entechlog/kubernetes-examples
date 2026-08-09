@@ -1,0 +1,26 @@
+# Normalize line endings for all text files by default.
+* text=auto eol=lf
+
+# Force LF explicitly for anything that runs as a script or gets parsed by
+# Linux-side tooling (containers, Ansible, Docker) - CRLF here causes silent
+# failures ("bad interpreter", YAML parse errors) when edited on Windows.
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.ini text eol=lf
+*.j2 text eol=lf
+Dockerfile text eol=lf
+*.env text eol=lf
+
+# Docs are fine to normalize but don't need a forced eol.
+*.md text
+
+# Binary files - never touch line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.tar.gz binary
+*.deb binary
