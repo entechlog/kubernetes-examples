@@ -1,0 +1,24 @@
+---
+- name: Enable cgroup v2 unified hierarchy (required by k3s/kubelet on Kubernetes v1.35+)
+  hosts: k3s_cluster
+  become: yes
+
+  tasks:
+    - name: Check if /boot/firmware/cmdline.txt exists
+      stat:
+        path: /boot/firmware/cmdline.txt
+      register: cmdline_file
+
+    - name: Enable cgroup v2 unified hierarchy via boot commandline
+      lineinfile:
+        path: /boot/firmware/cmdline.txt
+        backrefs: yes
+        regexp: '^((?!.*\bsystemd.unified_cgroup_hierarchy=1\b).*)$'
+        line: '\1 systemd.unified_cgroup_hierarchy=1'
+      when: cmdline_file.stat.exists
+      register: cgroup_result
+
+    - name: Reboot if the boot commandline changed
+      reboot:
+        reboot_timeout: 300
+      when: cgroup_result is changed
