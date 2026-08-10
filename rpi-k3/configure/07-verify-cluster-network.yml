@@ -1,0 +1,54 @@
+---
+# k3s-agent nodes can come up with an incomplete Flannel VXLAN mesh - each
+# agent only learns the server's pod CIDR during a race at initial join,
+# never the other agents'. Symptom: cross-node pod traffic between two
+# agent nodes times out (e.g. Grafana on one node can't reach Prometheus
+# on another), while same-node and agent<->server traffic works fine.
+# Restarting k3s-agent forces Flannel to redo peer discovery, which fixes
+# it - this playbook does that and then verifies the mesh is actually
+# complete before declaring success.
+
+- name: Restart k3s-agent on node hosts to force Flannel re-discovery
+  hosts: node
+  become: yes
+
+  tasks:
+    - name: Restart k3s-agent
+      systemd:
+        name: k3s-agent
+        state: restarted
+
+    - name: Wait for k3s-agent to be active
+      systemd:
+        name: k3s-agent
+      register: agent_status
+      until: agent_status.status.ActiveState == "active"
+      retries: 12
+      delay: 5
+
+    - name: Give Flannel a moment to rebuild its routing table
+      pause:
+        seconds: 15
+
+- name: Verify the Flannel pod network mesh is complete on every node
+  hosts: k3s_cluster
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Count flannel routes on this node
+      command: sh -c "ip route | grep -c flannel.1 || true"
+      register: flannel_route_count
+      changed_when: false
+
+    - name: Assert this node has a route to every other node's pod CIDR
+      assert:
+        that:
+          - flannel_route_count.stdout | int == (groups['k3s_cluster'] | length - 1)
+        fail_msg: >-
+          {{ inventory_hostname }} only has {{ flannel_route_count.stdout }} flannel
+          route(s), expected {{ groups['k3s_cluster'] | length - 1 }}. The pod network
+          mesh is still incomplete - cross-node pod traffic involving this node will
+          fail. Try re-running this playbook, or restart k3s/k3s-agent on the
+          affected node(s) manually.
+        success_msg: "{{ inventory_hostname }}: pod network mesh is complete"
