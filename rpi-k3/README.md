@@ -56,11 +56,12 @@ Two more, useful anytime (not just first-time setup):
 ### 2. Install k3s
 Done via the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) collection - a **separate clone**, not part of this repo.
 
-**Inside `kube-tools`**, pick a directory *outside* `kubernetes-examples/` (e.g. your home directory) and clone it there:
+**Inside `kube-tools`**, clone it onto the mounted host drive (`/C/...`), *outside* `kubernetes-examples/` - not into the container's own home directory (`~`), which is container-local storage and gets wiped if `kube-tools` is ever recreated (`docker compose down` + `up`):
 
 ```bash
-git clone https://github.com/k3s-io/k3s-ansible
-cd k3s-ansible
+cd /C/Users/<you>/VisualStudioCode   # adjust to wherever you keep repos on the host
+git clone https://github.com/k3s-io/k3s-ansible k3s-ansible-collection
+cd k3s-ansible-collection
 ansible-galaxy collection install -r collections/requirements.yml
 cp inventory-sample.yml inventory.yml
 ```
@@ -120,7 +121,7 @@ See the dashboard README for its own removal steps if you installed that too.
 This wipes k3s off all three Pis - not the Pis themselves, and not the SSH/hostname/cgroup setup from [step 1](#1-configure-the-pis), which you won't need to redo.
 
 ```bash
-# Inside kube-tools, from the k3s-ansible directory (the one you cloned in step 2, NOT kubernetes-examples/)
+# Inside kube-tools, from the k3s-ansible clone from step 2 (e.g. /C/Users/<you>/VisualStudioCode/k3s-ansible-collection - NOT kubernetes-examples/)
 ansible-playbook playbooks/reset.yml -i inventory.yml
 ```
 
