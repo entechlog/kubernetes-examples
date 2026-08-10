@@ -31,7 +31,7 @@ docker compose up -d
 docker exec -it kube-tools /bin/bash
 ```
 
-That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) project alongside it (this guide calls that local clone `k3s-ansible-collection` throughout, [step 2](#2-install-k3s) has the exact clone command) - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
+That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) project alongside it ([step 2](#2-install-k3s) has the exact clone command) - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
 
 Every time you start a fresh shell inside `kube-tools` (i.e. every new `docker exec`), set these two - every `ansible-playbook` command in this guide needs them and neither persists on its own:
 
@@ -67,15 +67,15 @@ Done via the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) colle
 
 ```bash
 cd /C/Users/<you>/VisualStudioCode   # adjust to wherever you keep repos on the host
-git clone https://github.com/k3s-io/k3s-ansible k3s-ansible-collection
-cd k3s-ansible-collection
+git clone https://github.com/k3s-io/k3s-ansible
+cd k3s-ansible
 ansible-galaxy collection install -r collections/requirements.yml
 cp inventory-sample.yml inventory.yml
 ```
 
 Edit `inventory.yml` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters, don't commit it). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` on Windows.
 
-**Still inside `kube-tools`, from the `k3s-ansible-collection` directory:**
+**Still inside `kube-tools`, from the `k3s-ansible` directory:**
 
 ```bash
 ansible-playbook playbooks/site.yml -i inventory.yml
@@ -137,7 +137,7 @@ This wipes k3s off all three Pis - not the Pis themselves, and not the SSH/hostn
 ```bash
 export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa
 export ANSIBLE_HOST_KEY_CHECKING=False
-cd /C/Users/<you>/VisualStudioCode/k3s-ansible-collection   # the clone from step 2, NOT kubernetes-examples/
+cd /C/Users/<you>/VisualStudioCode/k3s-ansible   # the clone from step 2, NOT kubernetes-examples/
 ansible-playbook playbooks/reset.yml -i inventory.yml
 ```
 
