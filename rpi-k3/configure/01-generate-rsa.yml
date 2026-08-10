@@ -9,18 +9,26 @@
       prompt: "Enter the passphrase for the SSH key"
 
   tasks:
+    # Written under playbook_dir (persists on the mounted host drive) rather
+    # than the target user's home directory (~/.ssh), which is container-local
+    # storage and gets wiped if kube-tools is ever recreated. playbook_dir
+    # keeps this portable across machines/usernames - no hardcoded path.
+    - name: ensure persistent .ssh directory exists
+      file:
+        path: "{{ playbook_dir }}/.ssh"
+        state: directory
+        mode: "0700"
+
     - name: generate SSH key "{{ssh_key_filename}}"
-      user:
-        name: "{{ansible_user}}"
-        generate_ssh_key: yes
-        ssh_key_type: rsa
-        ssh_key_bits: 4096
-        ssh_key_file: .ssh/{{ssh_key_filename}}
-        ssh_key_passphrase: "{{ssh_passphrase}}"
+      openssh_keypair:
+        path: "{{ playbook_dir }}/.ssh/{{ssh_key_filename}}"
+        type: rsa
+        size: 4096
+        passphrase: "{{ ssh_passphrase | default(omit) }}"
         force: no
       register: rsa_status
 
     - name: copy to authorized_keys
       shell: |
-        cat /home/{{ansible_user}}/.ssh/{{ssh_key_filename}} > ~/.ssh/authorized_keys
+        cat {{ playbook_dir }}/.ssh/{{ssh_key_filename}}.pub > ~/.ssh/authorized_keys
       when: rsa_status is changed
