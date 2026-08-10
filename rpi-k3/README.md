@@ -33,12 +33,15 @@ docker exec -it kube-tools /bin/bash
 
 That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) project alongside it ([step 2](#2-install-k3s) has the exact clone command) - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
 
-Every time you start a fresh shell inside `kube-tools` (i.e. every new `docker exec`), set these two - every `ansible-playbook` command in this guide needs them and neither persists on its own:
+Every time you start a fresh shell inside `kube-tools` (i.e. every new `docker exec`), run this - nothing here persists between sessions on its own, and every command later in this guide assumes all three are already set:
 
 ```bash
-export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa   # adjust <you> - without this, every Ansible command fails with "Permission denied (publickey,password)"
-export ANSIBLE_HOST_KEY_CHECKING=False                       # avoids interactive prompts when a Pi's SSH host key changes (e.g. after a re-flash)
+export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa                              # adjust <you> - without this, every Ansible command fails with "Permission denied (publickey,password)"
+export ANSIBLE_HOST_KEY_CHECKING=False                                                  # avoids interactive prompts when a Pi's SSH host key changes (e.g. after a re-flash)
+export INVENTORY=/C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory.yml  # only exists after step 2 creates it from inventory-sample.yml the first time
 ```
+
+`KUBECONFIG` also needs setting every fresh session, but only from [step 2](#2-install-k3s) onward (its value isn't known until you've fetched the cluster's actual kubeconfig at least once) - see that section for the exact line.
 
 ## Fresh Install
 
@@ -70,15 +73,21 @@ cd /C/Users/<you>/VisualStudioCode   # adjust to wherever you keep repos on the 
 git clone https://github.com/k3s-io/k3s-ansible
 cd k3s-ansible
 ansible-galaxy collection install -r collections/requirements.yml
-cp inventory-sample.yml inventory.yml
 ```
 
-Edit `inventory.yml` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters, don't commit it). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` on Windows.
+`inventory.yml` itself (`$INVENTORY`, exported in [Environment](#environment-where-do-things-run) above) lives in **this** repo, not the disposable `k3s-ansible` clone above - if you ever delete and re-clone `k3s-ansible` (e.g. to update it), your actual server/agent IPs and cluster token survive. Create it from the template if it doesn't already exist:
+
+```bash
+# First time only - inventory.yml is gitignored, so this won't already exist on a fresh clone of kubernetes-examples
+cp /C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory-sample.yml $INVENTORY
+```
+
+Edit `$INVENTORY` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters - it's gitignored, but don't paste it anywhere public either). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` on Windows.
 
 **Still inside `kube-tools`, from the `k3s-ansible` directory:**
 
 ```bash
-ansible-playbook playbooks/site.yml -i inventory.yml
+ansible-playbook playbooks/site.yml -i $INVENTORY
 ```
 
 Get the kubeconfig and fix its server address (the collection doesn't do this for you - it'll point at `127.0.0.1` otherwise). Save it under `kube-tools/.kube/` on the mounted drive, **not** `~/.kube/config`  - the latter is container-local and gets wiped if `kube-tools` is ever recreated, and every other command in this guide (monitoring, dashboard) expects `KUBECONFIG` to point at this same persistent file:
@@ -120,7 +129,7 @@ Not installed by default - see [`dashboard/README.md`](dashboard/README.md).
 
 ## Reset / Teardown
 
-Both of these need the same `ANSIBLE_PRIVATE_KEY_FILE`/`ANSIBLE_HOST_KEY_CHECKING` env vars as the rest of this guide if you're in a fresh `kube-tools` shell - see [Environment](#environment-where-do-things-run) if you jumped straight here.
+Both of these need the same env vars as the rest of this guide if you're in a fresh `kube-tools` shell - see [Environment](#environment-where-do-things-run) if you jumped straight here.
 
 ### Remove workloads only
 **Inside `kube-tools`**, with `KUBECONFIG` exported (see [step 2](#2-install-k3s)):
@@ -137,8 +146,9 @@ This wipes k3s off all three Pis - not the Pis themselves, and not the SSH/hostn
 ```bash
 export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa
 export ANSIBLE_HOST_KEY_CHECKING=False
-cd /C/Users/<you>/VisualStudioCode/k3s-ansible   # the clone from step 2, NOT kubernetes-examples/
-ansible-playbook playbooks/reset.yml -i inventory.yml
+export INVENTORY=/C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory.yml
+cd /C/Users/<you>/VisualStudioCode/k3s-ansible   # the clone from step 2, NOT kubernetes-examples/ - re-clone it here first if you deleted it
+ansible-playbook playbooks/reset.yml -i $INVENTORY
 ```
 
-To reinstall afterward, you can skip straight back to [step 2](#2-install-k3s) - `site.yml` uses the same `inventory.yml` you already have.
+To reinstall afterward, you can skip straight back to [step 2](#2-install-k3s) - `site.yml` uses the same `$INVENTORY` file you already have, since it lives in `kubernetes-examples/`, not the `k3s-ansible` clone.

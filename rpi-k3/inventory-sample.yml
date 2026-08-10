@@ -1,0 +1,19 @@
+---
+# Copy this to inventory.yml (gitignored - it'll contain your real cluster
+# join token) and fill in your actual values. Used with the separately-cloned
+# k3s-ansible project - see rpi-k3/README.md step 2.
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        192.168.0.100:
+    agent:
+      hosts:
+        192.168.0.101:
+        192.168.0.102:
+
+  vars:
+    ansible_user: ubuntu
+    k3s_version: v1.36.3+k3s1   # check https://github.com/k3s-io/k3s/releases for current
+    token: "CHANGE-ME"          # generate with: openssl rand -base64 64
+    api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"

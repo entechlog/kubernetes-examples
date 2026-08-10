@@ -134,3 +134,7 @@ dmypy.json
 # Kube Demo
 strimzi-0.*
 config
+
+# k3s-ansible inventory - contains the real cluster join token, keep out of git.
+# rpi-k3/inventory-sample.yml is the committed template.
+rpi-k3/inventory.yml
