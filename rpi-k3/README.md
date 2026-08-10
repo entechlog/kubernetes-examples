@@ -41,6 +41,12 @@ export ANSIBLE_HOST_KEY_CHECKING=False                                          
 export INVENTORY=/C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory.yml  # only exists after step 2 creates it from inventory-sample.yml the first time
 ```
 
+Only needed for commands run from inside the `k3s-ansible` clone specifically (step 2, and the reset command) - Ansible ignores that clone's own `ansible.cfg` because the mounted host drive looks "world writable" to Linux, so its `roles_path` setting is silently skipped without this:
+
+```bash
+export ANSIBLE_ROLES_PATH=/C/Users/<you>/VisualStudioCode/k3s-ansible/roles   # without this, ansible-playbook fails with "the role 'prereq' was not found"
+```
+
 `KUBECONFIG` also needs setting every fresh session, but only from [step 2](#2-install-k3s) onward (its value isn't known until you've fetched the cluster's actual kubeconfig at least once) - see that section for the exact line.
 
 ## Fresh Install
@@ -82,7 +88,13 @@ ansible-galaxy collection install -r collections/requirements.yml
 cp /C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory-sample.yml $INVENTORY
 ```
 
-Edit `$INVENTORY` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters - it's gitignored, but don't paste it anywhere public either). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` on Windows.
+Edit `$INVENTORY`:
+
+```bash
+nano $INVENTORY
+```
+
+Set `server`/`agent` host groups to your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and replace the `token` placeholder with a real value from `openssl rand -base64 64` (run that in a separate terminal, paste the result in - don't reuse the same token across clusters, and don't paste it anywhere public even though the file itself is gitignored). Save with `Ctrl+O`, Enter, then exit with `Ctrl+X`.
 
 **Still inside `kube-tools`, from the `k3s-ansible` directory:**
 
@@ -147,6 +159,7 @@ This wipes k3s off all three Pis - not the Pis themselves, and not the SSH/hostn
 export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa
 export ANSIBLE_HOST_KEY_CHECKING=False
 export INVENTORY=/C/Users/<you>/VisualStudioCode/kubernetes-examples/rpi-k3/inventory.yml
+export ANSIBLE_ROLES_PATH=/C/Users/<you>/VisualStudioCode/k3s-ansible/roles
 cd /C/Users/<you>/VisualStudioCode/k3s-ansible   # the clone from step 2, NOT kubernetes-examples/ - re-clone it here first if you deleted it
 ansible-playbook playbooks/reset.yml -i $INVENTORY
 ```
