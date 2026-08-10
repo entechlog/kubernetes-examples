@@ -33,6 +33,13 @@ docker exec -it kube-tools /bin/bash
 
 That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone `k3s-ansible` alongside it - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
 
+Every time you start a fresh shell inside `kube-tools` (i.e. every new `docker exec`), set these two - every `ansible-playbook` command in this guide needs them and neither persists on its own:
+
+```bash
+export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa   # adjust <you> - without this, every Ansible command fails with "Permission denied (publickey,password)"
+export ANSIBLE_HOST_KEY_CHECKING=False                       # avoids interactive prompts when a Pi's SSH host key changes (e.g. after a re-flash)
+```
+
 ## Fresh Install
 
 ### 1. Configure the Pis
@@ -68,7 +75,7 @@ cp inventory-sample.yml inventory.yml
 
 Edit `inventory.yml` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters, don't commit it). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` on Windows.
 
-**Still inside `kube-tools`, from the `k3s-ansible` directory:**
+**Still inside `kube-tools`, from the `k3s-ansible-collection` directory:**
 
 ```bash
 ansible-playbook playbooks/site.yml -i inventory.yml
@@ -93,7 +100,7 @@ It restarts `k3s-agent` on each node to force Flannel to redo peer discovery, th
 
 ### 4. Monitor the cluster
 ```bash
-# Inside kube-tools, from kubernetes-examples/
+# On your machine (not inside kube-tools) - docker exec runs it inside the container for you
 docker exec kube-tools bash rpi-k3/monitoring/install-monitoring.sh
 ```
 
