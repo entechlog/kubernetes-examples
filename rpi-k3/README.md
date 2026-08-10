@@ -25,7 +25,28 @@ Two more, useful anytime (not just first-time setup):
 
 ## 2. Install k3s
 
-Done via the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) collection, not this repo - see the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full `inventory.yml` setup (server/agent groups, join token, `ansible-galaxy collection install`).
+Done via the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) collection, not this repo. From wherever you keep clones (not inside `kubernetes-examples/`):
+
+```bash
+git clone https://github.com/k3s-io/k3s-ansible
+cd k3s-ansible
+ansible-galaxy collection install -r collections/requirements.yml
+cp inventory-sample.yml inventory.yml
+```
+
+Edit `inventory.yml` - `server`/`agent` host groups with your Pis' IPs, `ansible_user: ubuntu`, a `k3s_version` (check the [releases page](https://github.com/k3s-io/k3s/releases)), and a `token` generated with `openssl rand -base64 64` (don't reuse the same token across clusters, don't commit it). See the blog's [Install k3s](https://www.entechlog.com/blog/general/how-to-set-up-kubernetes-cluster-with-raspberry-pi/#install-k3s) section for the full example and the `ANSIBLE_ROLES_PATH` workaround if you hit `the role 'prereq' was not found` inside `kube-tools` on Windows.
+
+```bash
+ansible-playbook playbooks/site.yml -i inventory.yml
+```
+
+Get the kubeconfig and fix its server address (the collection doesn't do this for you - it'll point at `127.0.0.1` otherwise):
+
+```bash
+mkdir -p ~/.kube && scp ubuntu@<master-ip>:~/.kube/config ~/.kube/config
+export KUBECONFIG=~/.kube/config
+kubectl config set-cluster default --server=https://<master-ip>:6443 --kubeconfig ~/.kube/config
+```
 
 **After the cluster comes up**, run this once - k3s-agent nodes can come up with an incomplete pod network mesh (each agent only learns the server's route, not the other agents'), which silently breaks cross-node pod traffic (e.g. Grafana on one node failing to reach Prometheus on another) without failing the install itself:
 
