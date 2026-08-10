@@ -114,7 +114,7 @@ kubectl config set-cluster default --server=https://<master-ip>:6443 --kubeconfi
 Export that same `KUBECONFIG` line at the start of every new `kube-tools` shell from here on - it doesn't persist between `docker exec` sessions any more than the two `ANSIBLE_*` vars above do.
 
 ### 3. Verify the pod network
-**Inside `kube-tools`**, back in `kubernetes-examples/rpi-k3/configure/` - run this once, right after the cluster comes up. k3s-agent nodes can come up `Ready` with an incomplete pod network mesh (each agent only learns the server's route, not the other agents'), which silently breaks cross-node pod traffic (e.g. Grafana on one node failing to reach Prometheus on another) without failing the install itself:
+**Inside `kube-tools`**, back in `kubernetes-examples/` (repo root - not `rpi-k3/configure/`, the command below is relative to root) - run this once, right after the cluster comes up. k3s-agent nodes can come up `Ready` with an incomplete pod network mesh (each agent only learns the server's route, not the other agents'), which silently breaks cross-node pod traffic (e.g. Grafana on one node failing to reach Prometheus on another) without failing the install itself:
 
 ```bash
 ansible-playbook rpi-k3/configure/07-verify-cluster-network.yml -i rpi-k3/configure/hosts.ini
