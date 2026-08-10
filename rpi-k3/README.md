@@ -81,13 +81,16 @@ Edit `inventory.yml` - `server`/`agent` host groups with your Pis' IPs, `ansible
 ansible-playbook playbooks/site.yml -i inventory.yml
 ```
 
-Get the kubeconfig and fix its server address (the collection doesn't do this for you - it'll point at `127.0.0.1` otherwise):
+Get the kubeconfig and fix its server address (the collection doesn't do this for you - it'll point at `127.0.0.1` otherwise). Save it under `kube-tools/.kube/` on the mounted drive, **not** `~/.kube/config`  - the latter is container-local and gets wiped if `kube-tools` is ever recreated, and every other command in this guide (monitoring, dashboard) expects `KUBECONFIG` to point at this same persistent file:
 
 ```bash
-mkdir -p ~/.kube && scp ubuntu@<master-ip>:~/.kube/config ~/.kube/config
-export KUBECONFIG=~/.kube/config
-kubectl config set-cluster default --server=https://<master-ip>:6443 --kubeconfig ~/.kube/config
+mkdir -p /C/Users/<you>/VisualStudioCode/kubernetes-examples/kube-tools/.kube
+scp ubuntu@<master-ip>:~/.kube/config /C/Users/<you>/VisualStudioCode/kubernetes-examples/kube-tools/.kube/config
+export KUBECONFIG=/C/Users/<you>/VisualStudioCode/kubernetes-examples/kube-tools/.kube/config
+kubectl config set-cluster default --server=https://<master-ip>:6443 --kubeconfig $KUBECONFIG
 ```
+
+Export that same `KUBECONFIG` line at the start of every new `kube-tools` shell from here on - it doesn't persist between `docker exec` sessions any more than the two `ANSIBLE_*` vars above do.
 
 ### 3. Verify the pod network
 **Inside `kube-tools`**, back in `kubernetes-examples/rpi-k3/configure/` - run this once, right after the cluster comes up. k3s-agent nodes can come up `Ready` with an incomplete pod network mesh (each agent only learns the server's route, not the other agents'), which silently breaks cross-node pod traffic (e.g. Grafana on one node failing to reach Prometheus on another) without failing the install itself:
@@ -99,9 +102,10 @@ ansible-playbook rpi-k3/configure/07-verify-cluster-network.yml -i rpi-k3/config
 It restarts `k3s-agent` on each node to force Flannel to redo peer discovery, then asserts every node has a route to every other node's pod CIDR - it fails loudly if the mesh is still incomplete rather than reporting false success.
 
 ### 4. Monitor the cluster
+**Inside `kube-tools`**, with `KUBECONFIG` still exported from step 2, from `kubernetes-examples/`:
+
 ```bash
-# On your machine (not inside kube-tools) - docker exec runs it inside the container for you
-docker exec kube-tools bash rpi-k3/monitoring/install-monitoring.sh
+bash rpi-k3/monitoring/install-monitoring.sh
 ```
 
 ```bash
