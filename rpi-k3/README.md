@@ -31,7 +31,7 @@ docker compose up -d
 docker exec -it kube-tools /bin/bash
 ```
 
-That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone `k3s-ansible` alongside it - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
+That container has your whole `kubernetes-examples/` repo mounted, plus wherever you clone the external [k3s-ansible](https://github.com/k3s-io/k3s-ansible) project alongside it (this guide calls that local clone `k3s-ansible-collection` throughout, [step 2](#2-install-k3s) has the exact clone command) - so both live inside the same container filesystem. All Ansible commands in this guide run from inside `kube-tools`. The only things that run on your own machine are starting the container itself and the `open-*.sh` scripts (they need to launch **your** browser, which a container can't do).
 
 Every time you start a fresh shell inside `kube-tools` (i.e. every new `docker exec`), set these two - every `ansible-playbook` command in this guide needs them and neither persists on its own:
 
