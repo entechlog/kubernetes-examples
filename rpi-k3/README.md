@@ -120,9 +120,11 @@ Not installed by default - see [`dashboard/README.md`](dashboard/README.md).
 
 ## Reset / Teardown
 
+Both of these need the same `ANSIBLE_PRIVATE_KEY_FILE`/`ANSIBLE_HOST_KEY_CHECKING` env vars as the rest of this guide if you're in a fresh `kube-tools` shell - see [Environment](#environment-where-do-things-run) if you jumped straight here.
+
 ### Remove workloads only
+**Inside `kube-tools`**, with `KUBECONFIG` exported (see [step 2](#2-install-k3s)):
 ```bash
-# Inside kube-tools
 helm uninstall kube-prometheus-stack -n monitoring
 kubectl delete namespace monitoring
 ```
@@ -131,8 +133,11 @@ See the dashboard README for its own removal steps if you installed that too.
 ### Remove k3s entirely (keep the Pis)
 This wipes k3s off all three Pis - not the Pis themselves, and not the SSH/hostname/cgroup setup from [step 1](#1-configure-the-pis), which you won't need to redo.
 
+**Inside `kube-tools`** - full commands, not just the last one:
 ```bash
-# Inside kube-tools, from the k3s-ansible clone from step 2 (e.g. /C/Users/<you>/VisualStudioCode/k3s-ansible-collection - NOT kubernetes-examples/)
+export ANSIBLE_PRIVATE_KEY_FILE=/C/Users/<you>/.ssh/id_rsa
+export ANSIBLE_HOST_KEY_CHECKING=False
+cd /C/Users/<you>/VisualStudioCode/k3s-ansible-collection   # the clone from step 2, NOT kubernetes-examples/
 ansible-playbook playbooks/reset.yml -i inventory.yml
 ```
 
