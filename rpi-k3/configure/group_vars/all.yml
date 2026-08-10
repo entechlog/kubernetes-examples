@@ -1,8 +1,8 @@
 ---
-k3s_version: v1.17.5+k3s1
+# k3s_version, master_ip, and the extra_*_args vars used to live here as
+# copy-paste leftovers from k3s-ansible's own group_vars pattern - none of
+# the playbooks in this directory (RSA/hostname/cgroup/update/health-check)
+# actually reference them. k3s itself is installed separately via the
+# k3s-ansible collection, which has its own inventory.yml for that config.
 ansible_user: ubuntu
-systemd_dir: /etc/systemd/system
-master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
-extra_server_args: ""
-extra_agent_args: ""
 ansible_python_interpreter: /usr/bin/python3
